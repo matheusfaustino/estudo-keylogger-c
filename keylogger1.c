@@ -3,7 +3,6 @@
  * author: https://gist.github.com/frasten/
  */
 
-
 #include <X11/Xlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -70,12 +69,21 @@ int main(int argc, char* argv) {
     // Ao contrario do sleep(segundos) o usleep trabalha com microsegundos.
     usleep(5000);
 
-    // pega o que foi pressionado
+    // pega todas as keys que são pressionadas
     XQueryKeymap(display, nk);
-    
-    for(i=0;i<32;i++) {
-      if(nk[i] != ok[i]) {
+
+    for(i=0;i<32;i++) { // quantidade de bits passado pela XQueryKeymap. Sempre 32bits
+
+      // printf("#%d    %c %c \n",i , nk[i],ok[i]);
+      if(nk[i] != ok[i]) { // verifica se ja nao foi pressionada
+        /*
+         * Basicamente ele entra aqui quando detecta que uma teclas foi realmente pressionada
+         * ou seja, aqui ele elimina a repetição do processo causada pelo while infinito
+         * caindo aqui quando algo realmente é pressionado
+         */
+        // printf("#%d %c %c \n",i , nk[i],ok[i]);
         if(nk[i] != 0) {
+          // printf("#%d %c \n",i , nk[i]);
           //pressed key
           keycode=i*8+fooling(nk[i] ^ ok[i]);
           char ks = XKeycodeToKeysym(display, keycode, 0);
